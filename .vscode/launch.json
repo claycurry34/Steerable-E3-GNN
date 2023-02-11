@@ -1,0 +1,44 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "train: gravity",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+            "PYTHONPATH": "${workspaceFolder}",
+            "PYTORCH_ENABLE_MPS_FALLBACK": "1"
+            },
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--epochs", "10",
+                "--batch_size", "32",
+                "--print", "1",
+                "--target", "pos",
+                "--log", "true",
+                "--save_dir", "trained",
+                "--dataset", "gravity",
+                "--root", "simulated_data"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "sim: gravity",
+            "type": "python",
+            "request": "launch",
+            "program": "nbody/dataset/generate_dataset.py",
+            "console": "integratedTerminal",
+            "env": {
+            "PYTHONPATH": "${workspaceFolder}",
+            "PYTORCH_ENABLE_MPS_FALLBACK": "1"
+            },
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--simulation", "gravity", "--suffix", "small"
+            ],
+            "justMyCode": false
+        }
+    ]
+}

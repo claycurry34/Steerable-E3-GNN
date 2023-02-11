@@ -56,60 +56,61 @@ np.random.seed(args.seed)
 print(suffix)
 
 
-def generate_dataset(num_sims, length, sample_freq):
+def generate_dataset(num_sims, length, sample_freq, batch_size=1000):
     loc_all = list()
     vel_all = list()
-    edges_all = list()
-    charges_all = list()
-    for i in range(num_sims):
+    force_all = list()
+    mass_all = list()
+    for i in range(0, num_sims, batch_size):
         t = time.time()
-        loc, vel, edges, charges = sim.sample_trajectory(T=length,
-                                                         sample_freq=sample_freq)
+        loc, vel, force, mass = sim.sample_trajectory(T=length,
+                                                         sample_freq=sample_freq,
+                                                         batch_size=batch_size)
 
         loc_all.append(loc)
         vel_all.append(vel)
-        edges_all.append(edges)
-        charges_all.append(charges)
+        force_all.append(force)
+        mass_all.append(mass)
 
         if i % 100 == 0:
             print("Iter: {}, Simulation time: {}".format(i, time.time() - t))
 
-    charges_all = np.stack(charges_all)
-    loc_all = np.stack(loc_all)
-    vel_all = np.stack(vel_all)
-    edges_all = np.stack(edges_all)
+    loc_all = np.vstack(loc_all)
+    vel_all = np.vstack(vel_all)
+    force_all = np.vstack(force_all)
+    mass_all = np.vstack(force_all)
 
-    return loc_all, vel_all, edges_all, charges_all
+    return loc_all, vel_all, force_all, mass_all
 
 
 if __name__ == "__main__":
 
     print("Generating {} training simulations".format(args.num_train))
-    loc_train, vel_train, edges_train, charges_train = generate_dataset(args.num_train,
+    loc_train, vel_train, force_train, mass_train = generate_dataset(args.num_train,
                                                                         args.length,
                                                                         args.sample_freq)
 
     print("Generating {} validation simulations".format(args.num_valid))
-    loc_valid, vel_valid, edges_valid, charges_valid = generate_dataset(args.num_valid,
+    loc_valid, vel_valid, force_valid, mass_valid = generate_dataset(args.num_valid,
                                                                         args.length,
                                                                         args.sample_freq)
 
     print("Generating {} test simulations".format(args.num_test))
-    loc_test, vel_test, edges_test, charges_test = generate_dataset(args.num_test,
+    loc_test, vel_test, force_test, mass_test = generate_dataset(args.num_test,
                                                                     args.length_test,
                                                                     args.sample_freq)
 
     np.save('loc_train' + suffix + '.npy', loc_train)
     np.save('vel_train' + suffix + '.npy', vel_train)
-    np.save('edges_train' + suffix + '.npy', edges_train)
-    np.save('charges_train' + suffix + '.npy', charges_train)
+    np.save('force_train' + suffix + '.npy', force_train)
+    np.save('mass_train' + suffix + '.npy', mass_train)
 
     np.save('loc_valid' + suffix + '.npy', loc_valid)
     np.save('vel_valid' + suffix + '.npy', vel_valid)
-    np.save('edges_valid' + suffix + '.npy', edges_valid)
-    np.save('charges_valid' + suffix + '.npy', charges_valid)
+    np.save('force_valid' + suffix + '.npy', force_valid)
+    np.save('mass_valid' + suffix + '.npy', mass_valid)
 
     np.save('loc_test' + suffix + '.npy', loc_test)
     np.save('vel_test' + suffix + '.npy', vel_test)
-    np.save('edges_test' + suffix + '.npy', edges_test)
-    np.save('charges_test' + suffix + '.npy', charges_test)
+    np.save('force_test' + suffix + '.npy', force_test)
+    np.save('mass_test' + suffix + '.npy', mass_test)

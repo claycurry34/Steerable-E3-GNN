@@ -310,14 +310,14 @@ class GravitySim(object):
 
     def compute_acceleration(self, pos, mass, G, softening):
         # positions r = [x,y,z] for all particles
-        x = pos[:, 0:1]
-        y = pos[:, 1:2]
-        z = pos[:, 2:3]
-
+        x = pos[..., 0:1]
+        y = pos[..., 1:2]
+        z = pos[..., 2:3]
+        
         # matrix that stores all pairwise particle separations: r_j - r_i
-        dx = x.T - x
-        dy = y.T - y
-        dz = z.T - z
+        dx = x.transpose(0, 2, 1) - x
+        dy = y.transpose(0, 2, 1) - y
+        dz = z.transpose(0, 2, 1) - z
 
         # matrix that stores 1/r^3 for all particle pairwise particle separations
         inv_r3 = (dx**2 + dy**2 + dz**2 + softening**2)
@@ -328,8 +328,7 @@ class GravitySim(object):
         az = G * (dz * inv_r3) @ mass
 
         # pack together the acceleration components
-        a = np.hstack((ax, ay, az))
-        return a
+        return np.dstack((ax, ay, az))
 
     def _energy(self, pos, vel, mass, G):
         # Kinetic Energy:
@@ -356,34 +355,34 @@ class GravitySim(object):
 
         return KE, PE, KE+PE
 
-    def sample_trajectory(self, T=10000, sample_freq=10):
+    def sample_trajectory(self, T=10000, sample_freq=10, batch_size=1):
         assert (T % sample_freq == 0)
 
         T_save = int(T/sample_freq)
 
         N = self.n_balls
 
-        pos_save = np.zeros((T_save, N, self.dim))
-        vel_save = np.zeros((T_save, N, self.dim))
-        force_save = np.zeros((T_save, N, self.dim))
+        pos_save = np.zeros((batch_size, T_save, N, self.dim))
+        vel_save = np.zeros((batch_size, T_save, N, self.dim))
+        force_save = np.zeros((batch_size, T_save, N, self.dim))
 
         # Specific sim parameters
-        mass = np.ones((N, 1))
+        mass = np.ones((batch_size, N, 1))
         t = 0
-        pos = np.random.randn(N, self.dim)   # randomly selected positions and velocities
-        vel = np.random.randn(N, self.dim)
+        pos = np.random.randn(batch_size, N, self.dim)   # randomly selected positions and velocities
+        vel = np.random.randn(batch_size, N, self.dim)
 
         # Convert to Center-of-Mass frame
-        vel -= np.mean(mass * vel, 0) / np.mean(mass)
+        vel -= (np.mean(mass * vel, 1) / np.mean(mass, 1))[:, None, :]
 
         # calculate initial gravitational accelerations
         acc = self.compute_acceleration(pos, mass, self.interaction_strength, self.softening)
 
         for i in range(T):
             if i % sample_freq == 0:
-                pos_save[int(i/sample_freq)] = pos
-                vel_save[int(i/sample_freq)] = vel
-                force_save[int(i/sample_freq)] = acc*mass
+                pos_save[:, int(i/sample_freq)] = pos
+                vel_save[:, int(i/sample_freq)] = vel
+                force_save[:, int(i/sample_freq)] = acc*mass
 
             # (1/2) kick
             vel += acc * self.dt/2.0

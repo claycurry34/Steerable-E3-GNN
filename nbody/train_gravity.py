@@ -2,7 +2,6 @@ import argparse
 import numpy as np
 import torch
 import os
-import wandb
 from torch import nn, optim
 import time
 from e3nn.o3 import Irreps
@@ -64,26 +63,21 @@ def train(gpu, model, args):
     loss_mse = nn.MSELoss()
     transform = O3Transform(args.lmax_attr)
 
-    if args.log and gpu == 0:
-        if args.time_exp:
-            wandb.init(project="Gravity time", name=args.ID, config=args, entity="segnn")
-        else:
-            wandb.init(project="SEGNN Gravity", name=args.ID, config=args, entity="segnn")
-
+    
     best_val_loss = 1e8
     best_test_loss = 1e8
     best_epoch = 0
     for epoch in range(0, args.epochs):
         train_loss = run_epoch(model, optimizer, loss_mse, epoch, loader_train, transform, device, args)
         if args.log and gpu == 0:
-            wandb.log({"Train MSE": train_loss})
+            print({"Train MSE": train_loss})
         if epoch % args.test_interval == 0 or epoch == args.epochs-1:
             #train(epoch, loader_train, backprop=False)
             val_loss = run_epoch(model, optimizer, loss_mse, epoch, loader_val, transform, device, args, backprop=False)
             test_loss = run_epoch(model, optimizer, loss_mse, epoch, loader_test,
                                   transform, device, args, backprop=False)
             if args.log and gpu == 0:
-                wandb.log({"Val MSE": val_loss})
+                print({"Val MSE": val_loss})
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 best_test_loss = test_loss
@@ -92,7 +86,7 @@ def train(gpu, model, args):
                   (best_val_loss, best_test_loss, best_epoch))
 
     if args.log and gpu == 0:
-        wandb.log({"Test MSE": best_test_loss})
+        print({"Test MSE": best_test_loss})
     return best_val_loss, best_test_loss, best_epoch
 
 
@@ -137,7 +131,7 @@ def run_epoch(model, optimizer, criterion, epoch, loader, transform, device, arg
             if epoch % 100 == 99:
                 print("Forward average time: %.6f" % (time_exp_dic['time'] / time_exp_dic['counter']))
                 if args.log:
-                    wandb.log({"Time": time_exp_dic['time']/time_exp_dic['counter']})
+                    print({"Time": time_exp_dic['time']/time_exp_dic['counter']})
         loss = criterion(pred, graph.y)
         if backprop:
             loss.backward()

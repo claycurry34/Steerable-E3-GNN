@@ -89,7 +89,7 @@ python3 main.py --dataset=gravity --neighbours=6 --epochs=1000 --max_samples=100
 #### Timing experiments
 For QM9, please run the following, using further model specifications. The warmup period allows for the warmup of CUDA kernels. 
 ```bash
-python3 time.py --warmup=50 --forward_passes=1000
+python3 time_train.py --warmup=50 --forward_passes=1000
 ```
 
 For the N-Body datasets, please run the previous commands with the flag ```--time_exp=yes```

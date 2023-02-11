@@ -20,9 +20,9 @@ class GravityDataset():
             self.suffix = self.partition
         self.dataset_name = dataset_name
         if dataset_name == "nbody":
-            self.suffix += "_gravity100_initvel1"
+            self.suffix += "_gravity5_initvel1"
         elif dataset_name == "nbody_small" or dataset_name == "nbody_small_out_dist":
-            self.suffix += "_gravity100_initvel1small"
+            self.suffix += "_gravity5_initvel1small"
         else:
             raise Exception("Wrong dataset name %s" % self.dataset_name)
 
@@ -52,14 +52,14 @@ class GravityDataset():
 
         self.num_nodes = loc.shape[-1]
 
-        loc, vel, force, mass = self.preprocess(loc, vel, force, mass)
-        return (loc, vel, force, mass)
+        lloc, vel, force, mass = self.preprocess(loc, vel, force, mass)
+        return (lloc, vel, force, mass)
 
     def preprocess(self, loc, vel, force, mass):
         # cast to torch and swap n_nodes <--> n_features dimensions
-        loc = torch.Tensor(loc).transpose(2, 3)
-        vel = torch.Tensor(vel).transpose(2, 3)
-        force = torch.Tensor(force).transpose(2, 3)
+        loc = torch.Tensor(loc)
+        vel = torch.Tensor(vel)
+        force = torch.Tensor(force)
         loc = loc[0:self.max_samples, :, :, :]  # limit number of samples
         vel = vel[0:self.max_samples, :, :, :]  # speed when starting the trajectory
         force = force[0:self.max_samples, :, :, :]
